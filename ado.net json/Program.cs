@@ -41,7 +41,8 @@ namespace ado.net_json
         static void Main(string[] args)
         {
             
-            string query = "SELECT * FROM Employees";
+            string query = "SELECT * FROM Employees WHERE FirstName = @FirstName AND LastName = @LastName";
+            //string query = "SELECT * FROM Employees"; //without params
 
             var obj = DatabaseReader.GetDataFromQuery<List<Employee>>(query, new
             {

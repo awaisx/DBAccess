@@ -19,7 +19,15 @@ namespace ado.net_json.DbReader
     public static class DatabaseReader
     {
         static string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["DbConnectionStr"].ConnectionString;
-        public static T GetDataFromQuery<T>(string storedProcedure, object sqlParameters)
+
+        /// <summary>
+        /// Get Data From db using sql Query
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sqlQuery"></param>
+        /// <param name="sqlParameters"></param>
+        /// <returns></returns>
+        public static T GetDataFromQuery<T>(string sqlQuery, object sqlParameters)
          where T : class, new()
         {
             DataTable dt = new DataTable();
@@ -29,7 +37,7 @@ namespace ado.net_json.DbReader
                 try
                 {
 
-                    using (var command = new SqlCommand(storedProcedure, connection))
+                    using (var command = new SqlCommand(sqlQuery, connection))
                     {
                         command.Parameters.ConvertToSqlParams(sqlParameters);
 
@@ -74,6 +82,7 @@ namespace ado.net_json.DbReader
                 return ConvertToObject<T>(dt);
             }
         }
+
         private static List<T> ConvertToList<T>(DataTable dt) where T : class, new()
         {
             var list = new List<T>();
@@ -94,7 +103,7 @@ namespace ado.net_json.DbReader
         {
             if (dt.Rows.Count == 0)
             {
-                return null;
+                return new T();
             }
 
             var row = dt.Rows[0];
@@ -142,6 +151,13 @@ namespace ado.net_json.DbReader
             return genericClassObj;
         }
 
+        /// <summary>
+        /// Get Data From db using sql store proc
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="storedProcedure"></param>
+        /// <param name="sqlParameters"></param>
+        /// <returns></returns>
         public static T GetDataFromSP<T>(string storedProcedure, object sqlParameters)
          where T : class, new()
         {
@@ -206,7 +222,7 @@ namespace ado.net_json.DbReader
                 foreach (PropertyInfo property in parameters.GetType().GetProperties())
                 {
                     var parameter = new SqlParameter("@" + property.Name, null);
-                    parameter.Value = Convert.ToString(parameter.Value);
+                    parameter.Value = Convert.ToString(property.GetValue(parameters));
 
                     collection.Add(parameter);
 
