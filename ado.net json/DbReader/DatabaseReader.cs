@@ -27,7 +27,7 @@ namespace ado.net_json.DbReader
         /// <param name="sqlQuery"></param>
         /// <param name="sqlParameters"></param>
         /// <returns></returns>
-        public static T GetDataFromQuery<T>(string sqlQuery, object sqlParameters)
+        public static List<T> GetDataFromQuery<T>(string sqlQuery, object sqlParameters)
          where T : class, new()
         {
             DataTable dt = new DataTable();
@@ -39,7 +39,7 @@ namespace ado.net_json.DbReader
 
                     using (var command = new SqlCommand(sqlQuery, connection))
                     {
-                        command.Parameters.ConvertToSqlParams(sqlParameters);
+                        command.Parameters.GetSQLParams(sqlParameters);
 
                         command.CommandType = CommandType.Text;
                         command.CommandTimeout = 0;
@@ -69,18 +69,19 @@ namespace ado.net_json.DbReader
                 }
             }
 
+            var list = new List<T>();
+            foreach (DataRow row in dt.Rows)
+            {
+                Dictionary<string, object> valuePairs = new Dictionary<string, object>();
+                foreach (DataColumn col in dt.Columns)
+                {
+                    valuePairs[col.ColumnName] = row[col.ColumnName];
+                }
+                var obj = new T();
+                list.Add(AddDataToClass<T>(obj, valuePairs));
+            }
+            return list;
 
-            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
-            {
-                var itemType = typeof(T).GetGenericArguments()[0];
-                var method = typeof(DatabaseReader).GetMethod("ConvertToList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                                            .MakeGenericMethod(itemType);
-                return (T)method.Invoke(null, new object[] { dt });
-            }
-            else
-            {
-                return ConvertToObject<T>(dt);
-            }
         }
 
         private static List<T> ConvertToList<T>(DataTable dt) where T : class, new()
@@ -158,7 +159,7 @@ namespace ado.net_json.DbReader
         /// <param name="storedProcedure"></param>
         /// <param name="sqlParameters"></param>
         /// <returns></returns>
-        public static T GetDataFromSP<T>(string storedProcedure, object sqlParameters)
+        public static List<T> GetDataFromSP<T>(string storedProcedure, object sqlParameters)
          where T : class, new()
         {
             DataTable dt = new DataTable();
@@ -170,7 +171,7 @@ namespace ado.net_json.DbReader
 
                     using (var command = new SqlCommand(storedProcedure, connection))
                     {
-                        command.Parameters.ConvertToSqlParams(sqlParameters);
+                        command.Parameters.GetSQLParams(sqlParameters);
 
                         command.CommandType = CommandType.StoredProcedure;
                         command.CommandTimeout = 0;
@@ -200,21 +201,22 @@ namespace ado.net_json.DbReader
                 }
             }
 
+            var list = new List<T>();
+            foreach (DataRow row in dt.Rows)
+            {
+                Dictionary<string, object> valuePairs = new Dictionary<string, object>();
+                foreach (DataColumn col in dt.Columns)
+                {
+                    valuePairs[col.ColumnName] = row[col.ColumnName];
+                }
+                var obj = new T();
+                list.Add(AddDataToClass<T>(obj, valuePairs));
+            }
+            return list;
 
-            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
-            {
-                var itemType = typeof(T).GetGenericArguments()[0];
-                var method = typeof(DatabaseReader).GetMethod("ConvertToList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                                            .MakeGenericMethod(itemType);
-                return (T)method.Invoke(null, new object[] { dt });
-            }
-            else
-            {
-                return ConvertToObject<T>(dt);
-            }
         }
 
-        private static void ConvertToSqlParams(this SqlParameterCollection collection, object parameters)
+        private static void GetSQLParams(this SqlParameterCollection collection, object parameters)
         {
 
             if (parameters != null)

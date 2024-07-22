@@ -44,14 +44,14 @@ namespace ado.net_json
             string query = "SELECT * FROM Employees WHERE FirstName = @FirstName AND LastName = @LastName";
             //string query = "SELECT * FROM Employees"; //without params
 
-            var obj = DatabaseReader.GetDataFromQuery<List<Employee>>(query, new
+            var EmpList = DatabaseReader.GetDataFromQuery<Employee>(query, new
             {
                 FirstName = "John",
                 LastName = "Doe"
 
-            });
+            }).FirstOrDefault();
 
-            Console.WriteLine(obj.ToString());
+            Console.WriteLine(EmpList.ToString());
         }
 
     }
