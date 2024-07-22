@@ -44,7 +44,7 @@ namespace ado.net_json
             string query = "SELECT * FROM Employees WHERE FirstName = @FirstName AND LastName = @LastName";
             //string query = "SELECT * FROM Employees"; //without params
 
-            var EmpList = DatabaseReader.GetDataFromQuery<Employee>(query, new
+            var EmpList = DatabaseReader.FetchDataFromQuery<Employee>(query, new
             {
                 FirstName = "John",
                 LastName = "Doe"

@@ -27,7 +27,7 @@ namespace ado.net_json.DbReader
         /// <param name="sqlQuery"></param>
         /// <param name="sqlParameters"></param>
         /// <returns></returns>
-        public static List<T> GetDataFromQuery<T>(string sqlQuery, object sqlParameters)
+        public static List<T> FetchDataFromQuery<T>(string sqlQuery, object sqlParameters)
          where T : class, new()
         {
             DataTable dt = new DataTable();
@@ -39,7 +39,7 @@ namespace ado.net_json.DbReader
 
                     using (var command = new SqlCommand(sqlQuery, connection))
                     {
-                        command.Parameters.GetSQLParams(sqlParameters);
+                        command.Parameters.AddSqlParameters(sqlParameters);
 
                         command.CommandType = CommandType.Text;
                         command.CommandTimeout = 0;
@@ -78,45 +78,13 @@ namespace ado.net_json.DbReader
                     valuePairs[col.ColumnName] = row[col.ColumnName];
                 }
                 var obj = new T();
-                list.Add(AddDataToClass<T>(obj, valuePairs));
+                list.Add(MapDataToClass<T>(obj, valuePairs));
             }
             return list;
 
         }
 
-        private static List<T> ConvertToList<T>(DataTable dt) where T : class, new()
-        {
-            var list = new List<T>();
-            foreach (DataRow row in dt.Rows)
-            {
-                Dictionary<string, object> valuePairs = new Dictionary<string, object>();
-                foreach (DataColumn col in dt.Columns)
-                {
-                    valuePairs[col.ColumnName] = row[col.ColumnName];
-                }
-                var obj = new T();
-                list.Add(AddDataToClass<T>(obj, valuePairs));
-            }
-            return list;
-        }
-
-        private static T ConvertToObject<T>(DataTable dt) where T : class, new()
-        {
-            if (dt.Rows.Count == 0)
-            {
-                return new T();
-            }
-
-            var row = dt.Rows[0];
-            Dictionary<string, object> valuePairs = new Dictionary<string, object>();
-            foreach (DataColumn col in dt.Columns)
-            {
-                valuePairs[col.ColumnName] = row[col.ColumnName];
-            }
-            var obj = new T();
-            return AddDataToClass<T>(obj, valuePairs);
-        }
-        public static T AddDataToClass<T>(T genericClassObj, Dictionary<string, object> valuePair) where T : class, new()
+        public static T MapDataToClass<T>(T genericClassObj, Dictionary<string, object> valuePair) where T : class, new()
         {
             foreach (var property in genericClassObj.GetType().GetProperties())
             {
@@ -171,7 +139,7 @@ namespace ado.net_json.DbReader
 
                     using (var command = new SqlCommand(storedProcedure, connection))
                     {
-                        command.Parameters.GetSQLParams(sqlParameters);
+                        command.Parameters.AddSqlParameters(sqlParameters);
 
                         command.CommandType = CommandType.StoredProcedure;
                         command.CommandTimeout = 0;
@@ -210,13 +178,13 @@ namespace ado.net_json.DbReader
                     valuePairs[col.ColumnName] = row[col.ColumnName];
                 }
                 var obj = new T();
-                list.Add(AddDataToClass<T>(obj, valuePairs));
+                list.Add(MapDataToClass<T>(obj, valuePairs));
             }
             return list;
 
         }
 
-        private static void GetSQLParams(this SqlParameterCollection collection, object parameters)
+        private static void AddSqlParameters(this SqlParameterCollection collection, object parameters)
         {
 
             if (parameters != null)
